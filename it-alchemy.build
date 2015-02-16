@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Project DefaultTargets="GenerateRelease" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	
+	<!--
+		Build base responsável pela geração de versões de release do componente Intentor.Alchemy.
+	-->
+	
+	<Import Project="$(MSBuildExtensionsPath)\MSBuildCommunityTasks\MSBuild.Community.Tasks.Targets"/>
+		
+	<!--=CONFIGURAÇÕES===========================================================================-->
+	
+	<!--Configuraões do builder.-->
+	<PropertyGroup>
+		<SourceFolder>src\Intentor.Alchemy</SourceFolder>
+		<ReleaseFolder>bin</ReleaseFolder>
+		<Version>9.12.30.0</Version>
+	</PropertyGroup>
+	
+	<!--=============================================================================================-->
+		
+	<!--Arquivos a serem utilizados na geração do release-->
+	<ItemGroup>
+		<DefaultBinFiles Include="$(SourceFolder)\bin\Release\*.dll
+			;$(SourceFolder)\bin\Release\*.pdb
+			;$(SourceFolder)\bin\Release\*.xml"
+			Exclude="$(SourceFolder)\bin\Release\Microsoft*" />
+	</ItemGroup>
+	
+	<!--Limpeza das pastas aonde o release será armazenado.-->
+	<Target Name="CleanReleaseFolder">
+		<Message Text="Exclusão do diretório $(ReleaseFolder)" />
+		<RemoveDir Directories="$(ReleaseFolder)" />
+		<Message Text="Criação do diretório $(ReleaseFolder)" />		
+		<MakeDir Directories="$(ReleaseFolder)" />	
+	</Target>
+	
+	<!--Definições de versão manual.-->
+	<Target Name="VersionManual" DependsOnTargets="CleanReleaseFolder" Condition="$(Version) != ''">
+		<Message Text="Gerando arquivo de versão." />		
+		<Time Format="yyyy">
+			<Output TaskParameter="FormattedTime" PropertyName="Year" />
+		</Time>
+		<Message Text="Versao: $(Version)" />
+		<AssemblyInfo CodeLanguage="CS" 
+			OutputFile="$(SourceFolder)\Properties\AssemblyInfo.cs"
+			AssemblyTitle="Intentor.Alchemy"
+			AssemblyDescription="Alchemy Exception Handling Library."
+			AssemblyCompany="Intentor"
+			AssemblyProduct="Intentor.Alchemy"
+			AssemblyCopyright="Copyright © $(Year) Intentor"     
+			ComVisible="false"
+			CLSCompliant="true"
+			Guid="94316ca4-e257-4785-8b10-a181f9d1d6ce"
+			AssemblyVersion="$(Version)"
+			AssemblyFileVersion="$(Version)" />
+	</Target>
+	
+	<!--Definições de versão automática.-->
+	<Target Name="VersionAutomatic" DependsOnTargets="CleanReleaseFolder" Condition="$(Version) == ''">
+		<Message Text="Gerando arquivo de versão." />
+		<Time Format="y.MM.dd.HHmm">
+			<Output TaskParameter="FormattedTime" PropertyName="BuildVersion" />
+		</Time>
+		<Time Format="yyyy">
+			<Output TaskParameter="FormattedTime" PropertyName="Year" />
+		</Time>
+		<Message Text="Versao: $(BuildVersion)" />
+		<AssemblyInfo CodeLanguage="CS" 
+			OutputFile="$(SourceFolder)\Properties\AssemblyInfo.cs"
+			AssemblyTitle="Intentor.Alchemy"
+			AssemblyDescription="Alchemy Exception Handling Library."
+			AssemblyCompany="Intentor"
+			AssemblyProduct="Intentor.Alchemy"
+			AssemblyCopyright="Copyright © $(Year) Intentor"     
+			ComVisible="false"
+			CLSCompliant="true"
+			Guid="94316ca4-e257-4785-8b10-a181f9d1d6ce"
+			AssemblyVersion="$(BuildVersion)"
+			AssemblyFileVersion="$(BuildVersion)" />
+	</Target>
+	
+	<!--Realização da compilação da aplicação para release.-->
+	<Target Name="Compile">
+		<Message Text="Compilando versão." />
+		<MSBuild Projects="$(SourceFolder)\Intentor.Alchemy.csproj" 
+			Targets="Clean;Build" 
+			Properties="Configuration=Release" />
+	</Target>
+	
+	<!--Copia os arquivos do release.-->
+	<Target Name="CopyFiles" DependsOnTargets="Compile">
+		<Message Text="Copiando arquivos para $(ReleaseFolder)." />
+		<Copy SourceFiles="@(DefaultBinFiles)" 
+			DestinationFolder="$(ReleaseFolder)" />	
+	</Target>
+
+	<!--Geração  do release.-->
+	<Target Name="GenerateRelease">
+		<CallTarget Targets="CleanReleaseFolder" />
+		<CallTarget Targets="VersionManual" />
+		<CallTarget Targets="VersionAutomatic" />
+		<CallTarget Targets="Compile" />
+		<CallTarget Targets="CopyFiles" />
+		<Message Text="Geração de release concluída." />
+	</Target>
+	
+</Project>
